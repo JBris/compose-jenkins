@@ -1,0 +1,44 @@
+version: '3.7'
+
+services:
+  jenkins:
+    image: "jenkins/jenkins:${JENKINS_TAG}"
+    hostname: jenkins
+    container_name: jenkins
+    mem_limit: 4g
+    mem_reservation: 2g
+    build: 
+      args:
+        JENKINS_TAG: $JENKINS_TAG
+        JENKINS_NUM_OF_EXECUTORS: $JENKINS_NUM_OF_EXECUTORS
+    restart: unless-stopped
+    stop_grace_period: 10s
+    privileged: true
+    ports:
+      - ${JENKINS_PORT}:8080
+      - ${JENKINS_SLAVE_AGENT_PORT}:50000
+    environment:
+      JENKINS_TAG: $JENKINS_TAG
+      JENKINS_HOME: $JENKINS_HOME
+      JENKINS_NUM_OF_EXECUTORS: $JENKINS_NUM_OF_EXECUTORS
+      JENKINS_PORT: $JENKINS_PORT
+      JENKINS_SLAVE_AGENT_PORT: $JENKINS_SLAVE_AGENT_PORT
+      JAVA_OPTS: $JAVA_OPTS
+      JENKINS_OPTS: $JENKINS_OPTS
+      GITHUB_USERNAME: $GITHUB_USERNAME
+      GITHUB_API_TOKEN: $GITHUB_API_TOKEN
+      DOCKER_TAG: $DOCKER_TAG
+    volumes:
+      - ./jenkins_home:${JENKINS_HOME}
+      - ./services:/var/jenkins
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  docker:
+    image: "docker:${DOCKER_TAG}"
+    hostname: docker
+    container_name: docker
+    environment:
+      JENKINS_HOME: $JENKINS_HOME
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./jenkins_home:${JENKINS_HOME}
